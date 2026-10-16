@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Objectif Millionnaire - Le Jeu de Simulation Financière</title>
+    
+    <!-- Balises SEO indispensables pour apparaître sur Google -->
+    <meta name="description" content="Jouez à Objectif Millionnaire, le jeu de simulation financière gratuit. Prenez les bonnes décisions d'investissement et devenez riche !">
+    <meta name="keywords" content="jeu financier, simulateur bourse, devenir millionnaire, jeu argent, éducation financière">
+    <meta name="author" content="Votre Nom">
+
+    <style>
+        :root {
+            --primary: #2ecc71;
+            --primary-dark: #27ae60;
+            --background: #1a1a2e;
+            --surface: #161624;
+            --text: #ffffff;
+            --text-secondary: #a0a0b8;
+            --danger: #e74c3c;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--background);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .game-container {
+            background-color: var(--surface);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+        }
+
+        h1 {
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
+
+        .stats-container {
+            display: flex;
+            justify-content: space-around;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            font-size: 1.1rem;
+        }
+
+        .stat-value {
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        .scenario-text {
+            font-size: 1.2rem;
+            line-height: 1.6;
+            margin-bottom: 25px;
+            min-height: 80px;
+        }
+
+        .choices-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .btn {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: var(--text);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            font-size: 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: left;
+        }
+
+        .btn:hover {
+            background-color: var(--primary);
+            border-color: var(--primary);
+            transform: translateY(-2px);
+        }
+
+        .feedback {
+            margin-top: 20px;
+            font-style: italic;
+            color: var(--text-secondary);
+            min-height: 40px;
+        }
+
+        .restart-btn {
+            background-color: var(--danger);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            font-size: 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            display: none;
+            margin: 20px auto 0 auto;
+        }
+    </style>
+</head>
+<body>
+
+<div class="game-container">
+    <h1>💰 Objectif Millionnaire 💰</h1>
+    <p style="color: var(--text-secondary); margin-top: 0;">Le simulateur de choix financiers</p>
+
+    <div class="stats-container">
+        <div>Capital : <span id="capital" class="stat-value">1 000 €</span></div>
+        <div>Étape : <span id="step" class="stat-value">1 / 5</span></div>
+    </div>
+
+    <div id="scenario" class="scenario-text">
+        Chargement du jeu...
+    </div>
+
+    <div id="choices" class="choices-container">
+        <!-- Rempli dynamiquement par JS -->
+    </div>
+
+    <div id="feedback" class="feedback"></div>
+    <button id="restart-btn" class="restart-btn" onclick="restartGame()">Recommencer la partie</button>
+</div>
+
+<script>
+    let capital = 1000;
+    let currentStep = 0;
+
+    const gameData = [
+        {
+            text: "Étape 1 : Le point de départ. Vous avez 1 000 € d'économies. Quelle est votre première stratégie ?",
+            choices: [
+                { text: "Tout investir dans une cryptomonnaie inconnue dont on parle sur les réseaux.", effect: -800, feedback: "Aïe... C'était une arnaque (Rug pull). Vous perdez 800 €." },
+                { text: "Placer l'argent sur un livret d'épargne classique à 3%.", effect: 30, feedback: "Sécurisé, mais lent. Vous gagnez 30 € d'intérêts." },
+                { text: "Acheter une formation en ligne pour apprendre à coder et lancer un projet.", effect: 5000, feedback: "Excellent choix ! Grâce à vos nouvelles compétences, vous décrochez un contrat en freelance qui propulse votre capital !" }
+            ]
+        },
+        {
+            text: "Étape 2 : L'effet de levier. Votre business se développe. Vous devez faire un choix majeur d'investissement.",
+            choices: [
+                { text: "Investir massivement en Bourse dans un ETF diversifié (CAC 40 / S&P 500).", effect: 15000, feedback: "La bourse progresse bien cette année. Vos investissements fructifient solidement !" },
+                { text: "Acheter une voiture de sport à crédit pour afficher votre réussite.", effect: -10000, feedback: "La voiture décote instantanément et les mensualités plombent vos finances." },
+                { text: "Garder tout votre argent en liquide sous votre matelas par sécurité.", effect: 0, feedback: "L'argent ne perd rien nominalement, mais l'inflation grignote discrètement votre pouvoir d'achat." }
+            ]
+        },
+        {
+            text: "Étape 3 : La tempête boursière. Une crise financière mondiale éclate subitement, les marchés s'effondrent de -30% !",
+            choices: [
+                { text: "Paniquer et revendre toutes vos actions immédiatement pour limiter la casse.", effect: -15000, feedback: "Erreur classique. Vous vendez à perte au plus bas du marché." },
+                { text: "Profiter des soldes pour racheter des actions d'entreprises solides à bas prix.", effect: 45000, feedback: "Bravo ! Le marché rebondit fortement les mois suivants. Vous faites une excellente affaire !" },
+                { text: "Ne rien toucher et attendre que la tempête passe tranquillement.", effect: 5000, feedback: "La patience paie. Le marché récupère sa valeur initiale au bout de quelques mois." }
+            ]
+        },
+        {
+            text: "Étape 4 : Le dilemme de l'entrepreneur. Votre capital est désormais plus conséquent. Une opportunité se présente.",
+            choices: [
+                { text: "Lancer votre propre application mobile par abonnement récurrent.", effect: 500000, feedback: "Succès total ! Votre application devient virale et génère des revenus massifs." },
+                { text: "Prêter la moitié de votre capital à un ami qui veut ouvrir un restaurant conceptuel.", effect: -40000, feedback: "Malheureusement, le restaurant fait faillite. L'argent est perdu." },
+                { text: "Acheter un petit appartement pour le mettre en colocation étudiante.", effect: 60000, feedback: "L'immobilier est une valeur refuge. Les loyers tombent régulièrement chaque mois." }
+            ]
+        },
+        {
+            text: "Étape 5 : L'ultime ligne droite. Vous touchez presque au but. Quel sera votre coup final ?",
+            choices: [
+                { text: "Placer 100% de votre capital sur un seul trade à fort effet de levier.", effect: -0.9, isMultiplier: true, feedback: "Le marché se retourne contre vous. Vous perdez 90% de toute votre fortune en une seconde !" },
+                { text: "Revendre votre entreprise/application à un grand fonds d'investissement.", effect: 600000, feedback: "Négociation réussie ! Le rachat est validé pour un montant historique." },
+                { text: "Continuer à réinvestir prudemment vos dividendes en diversifiant au maximum.", effect: 150000, feedback: "La force des intérêts composés vous pousse sereinement vers le haut." }
+            ]
+        }
+    ];
+
+    function updateUI() {
+        document.getElementById('capital').innerText = capital.toLocaleString('fr-FR') + " €";
+        document.getElementById('step').innerText = (currentStep + 1) + " / " + gameData.length;
+    }
+
+    function loadScenario() {
+        if (currentStep < gameData.length) {
+            const currentData = gameData[currentStep];
+            document.getElementById('scenario').innerText = currentData.text;
+            
+            const choicesDiv = document.getElementById('choices');
+            choicesDiv.innerHTML = '';
+            
+            currentData.choices.forEach((choice, index) => {
+                const button = document.createElement('button');
+                button.className = 'btn';
+                button.innerText = choice.text;
+                button.onclick = () => makeChoice(index);
+                choicesDiv.appendChild(button);
+            });
+            updateUI();
+        } else {
+            endGame();
+        }
+    }
+
+    function makeChoice(index) {
+        const choice = gameData[currentStep].choices[index];
+        
+        if (choice.isMultiplier) {
+            capital = Math.round(capital * (1 + choice.effect));
+        } else {
+            capital += choice.effect;
+        }
+
+        if (capital < 0) capital = 0;
+
+        document.getElementById('feedback').innerText = choice.feedback;
+        
+        currentStep++;
+        
+        // Bloquer temporairement les clics pour laisser lire le retour de l'action
+        const buttons = document.querySelectorAll('.btn');
+        buttons.forEach(btn => btn.disabled = true);
+
+        setTimeout(() => {
+            document.getElementById('feedback').innerText = '';
+            if (currentStep < gameData.length) {
